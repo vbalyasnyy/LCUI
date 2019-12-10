@@ -156,6 +156,7 @@ size_t LCUIDisplay_Render(void)
 
 		/* Repaint dirty rectangles of surface */
 		for (LinkedList_Each(rn, &rects)) {
+Logger_Warning("VVV:%s:%d: \n", __func__, __LINE__);
 			rect = rn->data;
 			ev.paint.rect = *rect;
 			LCUI_TriggerEvent(&ev, NULL);
