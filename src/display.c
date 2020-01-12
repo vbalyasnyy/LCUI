@@ -53,17 +53,9 @@
 #define DEFAULT_WIDTH	800
 #define DEFAULT_HEIGHT	600
 
-#ifdef USE_OPENMP
-/**
- * Parallel rendering threads
- * We recommend that you set it to half the number of CPU logical cores
- */
-#define PARALLEL_RENDERING_THREADS 4
-#else
-#define PARALLEL_RENDERING_THREADS 1
-#endif
-
 #define FLASH_DURATION	1000.0
+
+static unsigned omp_threads_count = 1;
 
 typedef struct FlashRectRec_ {
 	int64_t paint_time;
@@ -214,12 +206,12 @@ static void SurfaceRecord_DumpRects(SurfaceRecord record, LinkedList *rects)
 	LCUI_Rect rect;
 	LCUI_Rect *sub_rect;
 	DirtyLayer layer;
-	DirtyLayerRec layers[PARALLEL_RENDERING_THREADS];
+	DirtyLayerRec layers[omp_threads_count];
 	LinkedListNode *node;
 
-	layer_height = max(200, layer_height / PARALLEL_RENDERING_THREADS + 1);
+	layer_height = max(200, layer_height / omp_threads_count + 1);
 	max_dirty = 0.8 * layer_width * layer_height;
-	for (i = 0; i < PARALLEL_RENDERING_THREADS; ++i) {
+	for (i = 0; i < omp_threads_count; ++i) {
 		layer = &layers[i];
 		layer->diry = 0;
 		layer->rect.y = i * layer_height;
@@ -231,7 +223,7 @@ static void SurfaceRecord_DumpRects(SurfaceRecord record, LinkedList *rects)
 	sub_rect = malloc(sizeof(LCUI_Rect));
 	for (LinkedList_Each(node, &record->rects)) {
 		rect = *(LCUI_Rect *)node->data;
-		for (i = 0; i < PARALLEL_RENDERING_THREADS; ++i) {
+		for (i = 0; i < omp_threads_count; ++i) {
 			layer = &layers[i];
 			if (layer->diry >= max_dirty) {
 				continue;
@@ -250,7 +242,7 @@ static void SurfaceRecord_DumpRects(SurfaceRecord record, LinkedList *rects)
 			}
 		}
 	}
-	for (i = 0; i < PARALLEL_RENDERING_THREADS; ++i) {
+	for (i = 0; i < omp_threads_count; ++i) {
 		layer = &layers[i];
 		if (layer->diry >= max_dirty) {
 			RectList_AddEx(rects, &layer->rect, FALSE);
@@ -288,8 +280,9 @@ static size_t LCUIDisplay_RenderSurface(SurfaceRecord record)
 
 #ifdef USE_OPENMP
 #pragma omp parallel for \
+	num_threads(omp_threads_count) \
 	default(none) \
-	shared(can_render, display, rects, rect_array) \
+	shared(can_render, display, rects, rect_array, omp_threads_count) \
 	firstprivate(record, ev) \
 	reduction(+:count)
 #endif
@@ -317,7 +310,13 @@ static size_t LCUIDisplay_RenderSurface(SurfaceRecord record)
 			LCUICursor_Paint(paint);
 		}
 		Surface_EndPaint(record->surface, paint);
+Logger_Error("[VVV][%s:%d]: DEF_CORES=%d OMP_CORES=%d(%d) LAYERS=%d WIDGETS=%d\n", __func__, __LINE__,
+omp_threads_count, omp_get_num_threads(), omp_get_max_threads(),
+rects.length, count);
 	}
+//Logger_Error("[VVV][%s:%d]: DEF_CORES=%d OMP_CORES=%d(%d) LAYERS=%d WIDGETS=%d\n", __func__, __LINE__,
+//PARALLEL_RENDERING_THREADS, omp_get_num_threads(), omp_get_max_threads(),
+//rects.length, count);
 	RectList_Clear(&rects);
 	record->rendered = count > 0;
 	count += LCUIDisplay_UpdateFlashRects(record);
@@ -351,6 +350,8 @@ size_t LCUIDisplay_Render(void)
 {
 	size_t count = 0;
 	LinkedListNode *node;
+
+	omp_threads_count = omp_get_max_threads() / 2;
 
 	if (!display.active) {
 		return 0;

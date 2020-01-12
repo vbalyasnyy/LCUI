@@ -147,7 +147,7 @@ int main(void)
 	LCUI_RunFrame();
 	t = LCUI_GetTime();
 	self.color_index = 0;
-	for (i = 0; i < 600; ++i) {
+	for (i = 0; i < 100; ++i) {
 		UpdateFrame(self.box);
 		LCUI_ProcessTimers();
 		LCUI_ProcessEvents();
