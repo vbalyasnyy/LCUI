@@ -131,9 +131,6 @@ void Widget_ComputeProperties(LCUI_Widget w)
 void Widget_ComputeWidthStyle(LCUI_Widget w)
 {
 	LCUI_WidgetStyle *style;
-	const float border_spacing_x = w->padding.left + w->padding.right +
-				       w->computed_style.border.left.width +
-				       w->computed_style.border.right.width;
 
 	style = &w->computed_style;
 	style->max_width = -1;
@@ -146,26 +143,49 @@ void Widget_ComputeWidthStyle(LCUI_Widget w)
 	}
 	if (w->computed_style.box_sizing != SV_BORDER_BOX) {
 		if (style->max_width != -1) {
-			style->max_width += border_spacing_x;
+			style->max_width += BorderX(w) + PaddingX(w);
 		}
 		if (style->min_width != -1) {
-			style->min_width += border_spacing_x;
+			style->min_width += BorderX(w) + PaddingX(w);
 		}
 	}
-	switch (Widget_GetWidthSizingRule(w)) {
-	case LCUI_SIZING_RULE_FIXED:
-		w->width = Widget_ComputeXMetric(w, key_width);
+	do {
+		if (Widget_HasAutoStyle(w, key_width)) {
+			if (!w->parent ||
+			    w->computed_style.display == SV_INLINE_BLOCK ||
+			    Widget_HasAbsolutePosition(w)) {
+				style->width_sizing =
+				    LCUI_SIZING_RULE_FIT_CONTENT;
+				break;
+			}
+			style->width_sizing = LCUI_SIZING_RULE_FILL;
+			if (w->parent->computed_style.width_sizing ==
+			    LCUI_SIZING_RULE_FIXED) {
+				style->width_sizing = LCUI_SIZING_RULE_FIXED;
+			}
+			w->width = w->parent->box.content.width - MarginX(w);
+			break;
+		}
+		if (Widget_CheckStyleType(w, key_width, scale)) {
+			if (!w->parent) {
+				style->width_sizing =
+				    LCUI_SIZING_RULE_FIT_CONTENT;
+				break;
+			}
+			style->width_sizing = LCUI_SIZING_RULE_PERCENT;
+			if (w->parent->computed_style.width_sizing ==
+			    LCUI_SIZING_RULE_FIXED) {
+				style->width_sizing = LCUI_SIZING_RULE_FIXED;
+			}
+			w->width = Widget_ComputeXMetric(w, key_width);
+		} else {
+			w->width = Widget_ComputeXMetric(w, key_width);
+			style->width_sizing = LCUI_SIZING_RULE_FIXED;
+		}
 		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
-			w->width += border_spacing_x;
+			w->width += BorderX(w) + PaddingX(w);
 		}
-		break;
-	case LCUI_SIZING_RULE_FILL:
-		w->width = w->parent->box.content.width;
-		w->width -= w->margin.left + w->margin.right;
-		break;
-	default:
-		break;
-	}
+	} while (0);
 	w->width = Widget_GetLimitedWidth(w, w->width);
 }
 
@@ -193,16 +213,31 @@ void Widget_ComputeHeightStyle(LCUI_Widget w)
 			style->min_height += border_spacing_y;
 		}
 	}
-	switch (Widget_GetHeightSizingRule(w)) {
-	case LCUI_SIZING_RULE_FIXED:
-		w->height = Widget_ComputeYMetric(w, key_height);
-		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
-			w->height += border_spacing_y;
+	do {
+		if (Widget_HasAutoStyle(w, key_height)) {
+			style->height_sizing = LCUI_SIZING_RULE_FIT_CONTENT;
+			break;
 		}
-		break;
-	default:
-		break;
-	}
+		if (Widget_CheckStyleType(w, key_height, scale)) {
+			if (!w->parent) {
+				style->height_sizing =
+				    LCUI_SIZING_RULE_FIT_CONTENT;
+				break;
+			}
+			style->height_sizing = LCUI_SIZING_RULE_PERCENT;
+			if (w->parent->computed_style.height_sizing ==
+			    LCUI_SIZING_RULE_FIXED) {
+				style->height_sizing = LCUI_SIZING_RULE_FIXED;
+			}
+			w->height = Widget_ComputeYMetric(w, key_height);
+		} else {
+			w->height = Widget_ComputeYMetric(w, key_height);
+			style->height_sizing = LCUI_SIZING_RULE_FIXED;
+		}
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			w->height += BorderY(w) + PaddingY(w);
+		}
+	} while (0);
 	w->height = Widget_GetLimitedHeight(w, w->height);
 }
 
@@ -221,23 +256,15 @@ void Widget_ComputeFlexBasisStyle(LCUI_Widget w)
 	if (w->parent &&
 	    w->parent->computed_style.flex.direction == SV_COLUMN) {
 		if (Widget_HasAutoStyle(w, key_flex_basis)) {
-			if (!Widget_HasStaticHeight(w)) {
-				flex->basis =
-				    ToBorderBoxWidth(w, w->min_content_height);
-				return;
-			}
-			flex->basis = Widget_ComputeYMetric(w, key_height);
+			flex->basis =
+			    ToBorderBoxHeight(w, w->max_content_height);
 			return;
 		}
 		flex->basis = Widget_ComputeYMetric(w, key_flex_basis);
 		return;
 	}
 	if (Widget_HasAutoStyle(w, key_flex_basis)) {
-		if (Widget_HasStaticWidth(w)) {
-			flex->basis = Widget_ComputeXMetric(w, key_width);
-			return;
-		}
-		flex->basis = ToBorderBoxWidth(w, w->min_content_width);
+		flex->basis = ToBorderBoxWidth(w, w->max_content_width);
 		return;
 	}
 	flex->basis = Widget_ComputeXMetric(w, key_flex_basis);
@@ -545,6 +572,7 @@ void Widget_SetStyleString(LCUI_Widget w, const char *name, const char *value)
 	ctx.style_handler_arg = w;
 	ctx.parser = LCUI_GetCSSPropertyParser(name);
 	ctx.parser->parse(&ctx, value);
+	Widget_UpdateStyle(w, FALSE);
 }
 
 void Widget_AddTaskByStyle(LCUI_Widget w, int key)
