@@ -367,10 +367,6 @@ typedef struct LCUI_WidgetRec_ {
 	(Widget_CheckStyleType(W, key_width, SCALE) || \
 	 Widget_CheckStyleType(W, key_height, SCALE))
 
-#define Widget_HasParentDependentWidth(W)              \
-	(Widget_CheckStyleType(W, key_width, scale) && \
-	 !Widget_HasStaticWidthParent(W))
-
 INLINE LCUI_BOOL Widget_IsFlexLayoutStyleWorks(LCUI_Widget w)
 {
 	return Widget_HasFlexDisplay(w) ||
@@ -384,12 +380,6 @@ LCUI_API float Widget_ComputeYMetric(LCUI_Widget w, int key);
 
 /** 部件是否有值为自动（默认）的样式 */
 LCUI_API LCUI_BOOL Widget_HasAutoStyle(LCUI_Widget w, int key);
-
-/** 父级部件有可直接获取的静态宽度 */
-LCUI_API LCUI_BOOL Widget_HasStaticWidthParent(LCUI_Widget widget);
-
-/** 如果部件具有自适应内容的宽度 */
-LCUI_API LCUI_BOOL Widget_HasFitContentWidth(LCUI_Widget w);
 
 LCUI_API LCUI_BOOL Widget_HasStaticWidth(LCUI_Widget w);
 
@@ -495,18 +485,6 @@ LCUI_API void Widget_AddState(LCUI_Widget w, LCUI_WidgetState state);
 /** Check whether the widget is in the visible area */
 LCUI_API LCUI_BOOL Widget_InVisibleArea(LCUI_Widget w);
 
-/** Generate a hash for a widget to identify it and siblings */
-LCUI_API void Widget_GenerateSelfHash(LCUI_Widget w);
-
-/** Generate hash values for a widget and its children */
-LCUI_API void Widget_GenerateHash(LCUI_Widget w);
-
-LCUI_API size_t Widget_SetHashList(LCUI_Widget w, unsigned *hash_list,
-				   size_t len);
-
-LCUI_API size_t Widget_GetHashList(LCUI_Widget w, unsigned *hash_list,
-				   size_t maxlen);
-
 /** Set widget updating rules */
 LCUI_API int Widget_SetRules(LCUI_Widget w, const LCUI_WidgetRulesRec *rules);
 
@@ -518,27 +496,11 @@ LCUI_API void Widget_SetText(LCUI_Widget w, const char *text);
 LCUI_API void Widget_BindProperty(LCUI_Widget w, const char *name,
 				  LCUI_Object value);
 
-/** 计算部件的最大宽度 */
-LCUI_API float Widget_ComputeMaxWidth(LCUI_Widget w);
-
-/** 计算部件可利用的宽度 */
-LCUI_API float Widget_ComputeFillAvailableWidth(LCUI_Widget w);
-
-/** 计算部件的最大内容宽度 */
-LCUI_API float Widget_ComputeMaxContentWidth(LCUI_Widget w);
-
-/** 计算部件的最大可用宽度 */
-LCUI_API float Widget_ComputeMaxAvaliableWidth(LCUI_Widget widget);
-
 LCUI_API void Widget_UpdateBoxPosition(LCUI_Widget w);
 
 LCUI_API void Widget_UpdateCanvasBox(LCUI_Widget w);
 
 LCUI_API void Widget_UpdateBoxSize(LCUI_Widget w);
-
-LCUI_API void Widget_ComputeFlexBasisStyle(LCUI_Widget w);
-
-LCUI_API void Widget_SetBorderBoxSize(LCUI_Widget w, float width, float height);
 
 LCUI_API size_t LCUIWidget_ClearTrash(void);
 
