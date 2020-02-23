@@ -195,8 +195,12 @@ static void FlexBoxLayout_LoadRows(LCUI_FlexBoxLayoutContext ctx)
 	LinkedListNode *node;
 
 	float basis;
-	float max_main_size = ctx->widget->box.content.width;
+	float max_main_size = -1;
 
+	if (ctx->rule == LCUI_LAYOUT_RULE_FIXED ||
+	    ctx->rule == LCUI_LAYOUT_RULE_FIXED_WIDTH) {
+		max_main_size = ctx->widget->box.content.width;
+	}
 	DEBUG_MSG("%s, max_main_size: %g\n", ctx->widget->id, max_main_size);
 	for (LinkedList_Each(node, &ctx->widget->children)) {
 		child = node->data;
@@ -224,7 +228,8 @@ static void FlexBoxLayout_LoadRows(LCUI_FlexBoxLayoutContext ctx)
 			  ctx->lines.length, child->index, ctx->line->main_size,
 			  basis);
 		/* Check line wrap */
-		if (flex->wrap == SV_WRAP && ctx->line->elements.length > 0) {
+		if (flex->wrap == SV_WRAP && ctx->line->elements.length > 0 &&
+		    max_main_size != -1) {
 			if (ctx->line->main_size + basis - max_main_size >
 			    0.4f) {
 				FlexBoxLayout_NextLine(ctx);
@@ -257,7 +262,8 @@ static void FlexBoxLayout_LoadColumns(LCUI_FlexBoxLayoutContext ctx)
 	float basis;
 	float max_main_size = -1;
 
-	if (Widget_HasStaticHeight(ctx->widget)) {
+	if (ctx->rule == LCUI_LAYOUT_RULE_FIXED ||
+	    ctx->rule == LCUI_LAYOUT_RULE_FIXED_HEIGHT) {
 		max_main_size = ctx->widget->box.content.height;
 	}
 	DEBUG_MSG("max_main_size: %g\n", max_main_size);
@@ -277,7 +283,7 @@ static void FlexBoxLayout_LoadColumns(LCUI_FlexBoxLayoutContext ctx)
 			  ctx->lines.length, child->index, ctx->line->main_size,
 			  basis);
 		if (flex->wrap == SV_WRAP && ctx->line->elements.length > 0 &&
-		    max_main_size >= 0) {
+		    max_main_size != -1) {
 			if (ctx->line->main_size + basis - max_main_size >
 			    0.4f) {
 				FlexBoxLayout_NextLine(ctx);
@@ -355,6 +361,8 @@ static void UpdateFlexItemSize(LCUI_Widget w, LCUI_LayoutRule rule)
 	LCUI_WidgetLayoutDiffRec diff;
 
 	Widget_BeginLayoutDiff(w, &diff);
+	Widget_ComputeWidthLimitStyle(w, LCUI_LAYOUT_RULE_FIXED);
+	Widget_ComputeHeightLimitStyle(w, LCUI_LAYOUT_RULE_FIXED);
 	Widget_UpdateBoxSize(w);
 	if (content_width == w->box.padding.width &&
 	    content_height == w->box.padding.height) {
@@ -408,7 +416,6 @@ static void FlexBoxLayout_ReflowRow(LCUI_FlexBoxLayoutContext ctx)
 				UpdateFlexItemSize(
 				    w, LCUI_LAYOUT_RULE_FIXED_WIDTH);
 			} else {
-				Widget_ComputeSizeStyle(w);
 				UpdateFlexItemSize(
 				    w, LCUI_LAYOUT_RULE_FIXED_WIDTH);
 			}

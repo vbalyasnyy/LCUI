@@ -128,27 +128,87 @@ void Widget_ComputeProperties(LCUI_Widget w)
 	}
 }
 
+INLINE LCUI_BOOL Widget_HasFixedWidth(LCUI_Widget w, LCUI_LayoutRule rule)
+{
+	return rule == LCUI_LAYOUT_RULE_FIXED ||
+	       rule == LCUI_LAYOUT_RULE_FIXED_WIDTH ||
+	       (w->parent && w->parent->computed_style.width_sizing ==
+				 LCUI_SIZING_RULE_FIXED);
+}
+
+INLINE LCUI_BOOL Widget_HasFixedHeight(LCUI_Widget w, LCUI_LayoutRule rule)
+{
+	return rule == LCUI_LAYOUT_RULE_FIXED ||
+	       rule == LCUI_LAYOUT_RULE_FIXED_HEIGHT ||
+	       (w->parent && w->parent->computed_style.height_sizing ==
+				 LCUI_SIZING_RULE_FIXED);
+}
+
+void Widget_ComputeWidthLimitStyle(LCUI_Widget w, LCUI_LayoutRule rule)
+{
+	LCUI_WidgetStyle *style = &w->computed_style;
+
+	style->max_width = -1;
+	style->min_width = -1;
+	while (Widget_CheckStyleValid(w, key_max_width)) {
+		if (Widget_CheckStyleType(w, key_max_width, SCALE) &&
+		    !Widget_HasFixedWidth(w, rule)) {
+			break;
+		}
+		style->max_width = Widget_ComputeXMetric(w, key_max_width);
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			style->max_width += BorderX(w) + PaddingX(w);
+		}
+		break;
+	}
+	while (Widget_CheckStyleValid(w, key_min_width)) {
+		if (Widget_CheckStyleType(w, key_min_width, SCALE) &&
+		    !Widget_HasFixedWidth(w, rule)) {
+			break;
+		}
+		style->min_width = Widget_ComputeXMetric(w, key_min_width);
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			style->min_width += BorderX(w) + PaddingX(w);
+		}
+		break;
+	}
+}
+
+void Widget_ComputeHeightLimitStyle(LCUI_Widget w, LCUI_LayoutRule rule)
+{
+	LCUI_WidgetStyle *style = &w->computed_style;
+
+	style->max_height = -1;
+	style->min_height = -1;
+	while (Widget_CheckStyleValid(w, key_max_height)) {
+		if (Widget_CheckStyleType(w, key_max_height, SCALE) &&
+		    !Widget_HasFixedHeight(w, rule)) {
+			break;
+		}
+		style->max_height = Widget_ComputeYMetric(w, key_max_height);
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			style->max_height += BorderY(w) + PaddingY(w);
+		}
+		break;
+	}
+	while (Widget_CheckStyleValid(w, key_min_height)) {
+		if (Widget_CheckStyleType(w, key_min_height, SCALE) &&
+		    !Widget_HasFixedHeight(w, rule)) {
+			break;
+		}
+		style->min_height = Widget_ComputeYMetric(w, key_min_height);
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			style->min_height += BorderY(w) + PaddingY(w);
+		}
+		break;
+	}
+}
+
 void Widget_ComputeWidthStyle(LCUI_Widget w)
 {
 	LCUI_WidgetStyle *style;
 
 	style = &w->computed_style;
-	style->max_width = -1;
-	style->min_width = -1;
-	if (Widget_CheckStyleValid(w, key_max_width)) {
-		style->max_width = Widget_ComputeXMetric(w, key_max_width);
-	}
-	if (Widget_CheckStyleValid(w, key_min_width)) {
-		style->min_width = Widget_ComputeXMetric(w, key_min_width);
-	}
-	if (w->computed_style.box_sizing != SV_BORDER_BOX) {
-		if (style->max_width != -1) {
-			style->max_width += BorderX(w) + PaddingX(w);
-		}
-		if (style->min_width != -1) {
-			style->min_width += BorderX(w) + PaddingX(w);
-		}
-	}
 	do {
 		if (Widget_HasAutoStyle(w, key_width)) {
 			if (!w->parent ||
@@ -192,27 +252,8 @@ void Widget_ComputeWidthStyle(LCUI_Widget w)
 void Widget_ComputeHeightStyle(LCUI_Widget w)
 {
 	LCUI_WidgetStyle *style;
-	const float border_spacing_y = w->padding.top + w->padding.bottom +
-				       w->computed_style.border.top.width +
-				       w->computed_style.border.bottom.width;
 
 	style = &w->computed_style;
-	style->max_height = -1;
-	style->min_height = -1;
-	if (Widget_CheckStyleValid(w, key_max_height)) {
-		style->max_height = Widget_ComputeYMetric(w, key_max_height);
-	}
-	if (Widget_CheckStyleValid(w, key_min_height)) {
-		style->min_height = Widget_ComputeYMetric(w, key_min_height);
-	}
-	if (w->computed_style.box_sizing != SV_BORDER_BOX) {
-		if (style->max_height != -1) {
-			style->max_height += border_spacing_y;
-		}
-		if (style->min_height != -1) {
-			style->min_height += border_spacing_y;
-		}
-	}
 	do {
 		if (Widget_HasAutoStyle(w, key_height)) {
 			style->height_sizing = LCUI_SIZING_RULE_FIT_CONTENT;
@@ -245,6 +286,8 @@ void Widget_ComputeSizeStyle(LCUI_Widget w)
 {
 	w->computed_style.box_sizing =
 	    ComputeStyleOption(w, key_box_sizing, SV_CONTENT_BOX);
+	Widget_ComputeWidthLimitStyle(w, LCUI_LAYOUT_RULE_MAX_CONTENT);
+	Widget_ComputeHeightLimitStyle(w, LCUI_LAYOUT_RULE_MAX_CONTENT);
 	Widget_ComputeWidthStyle(w);
 	Widget_ComputeHeightStyle(w);
 }
@@ -255,34 +298,37 @@ void Widget_ComputeFlexBasisStyle(LCUI_Widget w)
 
 	if (w->parent &&
 	    w->parent->computed_style.flex.direction == SV_COLUMN) {
-		if (Widget_HasAutoStyle(w, key_flex_basis)) {
-			if (w->computed_style.height_sizing ==
-			    LCUI_SIZING_RULE_FIXED) {
-				flex->basis =
-				    Widget_ComputeXMetric(w, key_height);
-			} else {
-				flex->basis = w->max_content_height;
+		if (!Widget_HasAutoStyle(w, key_flex_basis)) {
+			flex->basis = Widget_ComputeYMetric(w, key_flex_basis);
+			flex->basis = Widget_GetLimitedHeight(w, flex->basis);
+			return;
+		}
+		if (w->computed_style.height_sizing == LCUI_SIZING_RULE_FIXED) {
+			flex->basis = Widget_ComputeYMetric(w, key_height);
+			if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+				flex->basis = ToBorderBoxHeight(w, flex->basis);
 			}
 		} else {
-			flex->basis = Widget_ComputeYMetric(w, key_flex_basis);
-		}
-		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			flex->basis = w->max_content_height;
 			flex->basis = ToBorderBoxHeight(w, flex->basis);
 		}
-		flex->basis = Widget_GetLimitedHeight(w, flex->basis);
 		return;
 	}
 	if (Widget_HasAutoStyle(w, key_flex_basis)) {
 		if (w->computed_style.width_sizing == LCUI_SIZING_RULE_FIXED) {
 			flex->basis = Widget_ComputeXMetric(w, key_width);
+			if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+				flex->basis = ToBorderBoxWidth(w, flex->basis);
+			}
 		} else {
 			flex->basis = w->max_content_width;
+			flex->basis = ToBorderBoxWidth(w, flex->basis);
 		}
 	} else {
 		flex->basis = Widget_ComputeXMetric(w, key_flex_basis);
-	}
-	if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
-		flex->basis = ToBorderBoxWidth(w, flex->basis);
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			flex->basis = ToBorderBoxWidth(w, flex->basis);
+		}
 	}
 	flex->basis = Widget_GetLimitedWidth(w, flex->basis);
 }

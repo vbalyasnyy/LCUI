@@ -449,18 +449,6 @@ LCUI_SizingRule Widget_GetHeightSizingRule(LCUI_Widget w)
 	return LCUI_SIZING_RULE_FIT_CONTENT;
 }
 
-LCUI_BOOL Widget_HasStaticWidth(LCUI_Widget w)
-{
-	return !Widget_HasAutoStyle(w, key_width) &&
-	       !Widget_CheckStyleType(w, key_width, scale);
-}
-
-LCUI_BOOL Widget_HasStaticHeight(LCUI_Widget w)
-{
-	return !Widget_HasAutoStyle(w, key_height) &&
-	       !Widget_CheckStyleType(w, key_height, scale);
-}
-
 void Widget_SetText(LCUI_Widget w, const char *text)
 {
 	if (w->proto && w->proto->settext) {

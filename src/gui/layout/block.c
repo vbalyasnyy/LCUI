@@ -195,12 +195,11 @@ static void UpdateBlockItemSize(LCUI_Widget w, LCUI_LayoutRule rule)
 	LCUI_WidgetLayoutDiffRec diff;
 
 	Widget_BeginLayoutDiff(w, &diff);
-	Widget_ComputeSizeStyle(w);
+	Widget_ComputeWidthLimitStyle(w, LCUI_LAYOUT_RULE_FIXED);
+	Widget_ComputeHeightLimitStyle(w, LCUI_LAYOUT_RULE_FIXED);
+	Widget_ComputeWidthStyle(w);
+	Widget_ComputeHeightStyle(w);
 	Widget_UpdateBoxSize(w);
-	if (Widget_HasClass(w, "scrollbar-slider")) {
-		_DEBUG_MSG("scrollbar-slider, size: (%g, %g)\n", w->width,
-			   w->height);
-	}
 	if (content_width == w->box.content.width &&
 	    content_height == w->box.content.height) {
 		return;
@@ -311,18 +310,11 @@ static void BlockLayout_ReflowRow(LCUI_BlockLayoutContext ctx, float row_y)
 	float x = ctx->widget->padding.left;
 
 	LCUI_Widget w;
-	LCUI_WidgetStyle *style;
 	LinkedListNode *node;
 
 	for (LinkedList_Each(node, &ctx->row->elements)) {
 		w = node->data;
-		style = &w->computed_style;
-		if ((style->height_sizing != LCUI_SIZING_RULE_FIXED &&
-		     style->height_sizing != LCUI_SIZING_RULE_FIT_CONTENT) ||
-		    (style->width_sizing != LCUI_SIZING_RULE_FIXED &&
-		     style->width_sizing != LCUI_SIZING_RULE_FIT_CONTENT)) {
-			UpdateBlockItemSize(w, LCUI_LAYOUT_RULE_FIXED);
-		}
+		UpdateBlockItemSize(w, LCUI_LAYOUT_RULE_FIXED);
 		BlockLayout_UpdateElementMargin(ctx, w);
 		BlockLayout_UpdateElementPosition(ctx, w, x, row_y);
 		Widget_AddState(w, LCUI_WSTATE_LAYOUTED);

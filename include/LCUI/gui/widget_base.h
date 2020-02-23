@@ -380,10 +380,6 @@ LCUI_API float Widget_ComputeYMetric(LCUI_Widget w, int key);
 
 LCUI_API LCUI_BOOL Widget_HasAutoStyle(LCUI_Widget w, int key);
 
-LCUI_API LCUI_BOOL Widget_HasStaticWidth(LCUI_Widget w);
-
-LCUI_API LCUI_BOOL Widget_HasStaticHeight(LCUI_Widget w);
-
 LCUI_API LCUI_Widget LCUIWidget_GetRoot(void);
 
 LCUI_API LCUI_Widget LCUIWidget_GetById(const char *idstr);

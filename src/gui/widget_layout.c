@@ -56,4 +56,6 @@ void Widget_Reflow(LCUI_Widget w, LCUI_LayoutRule rule)
 	ev.cancel_bubble = TRUE;
 	ev.type = LCUI_WEVENT_AFTERLAYOUT;
 	Widget_TriggerEvent(w, &ev, NULL);
+	DEBUG_MSG("id: %s, type: %s, size: (%g, %g)\n", w->id, w->type,
+		  w->width, w->height);
 }
