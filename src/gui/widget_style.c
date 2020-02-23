@@ -256,18 +256,35 @@ void Widget_ComputeFlexBasisStyle(LCUI_Widget w)
 	if (w->parent &&
 	    w->parent->computed_style.flex.direction == SV_COLUMN) {
 		if (Widget_HasAutoStyle(w, key_flex_basis)) {
-			flex->basis =
-			    ToBorderBoxHeight(w, w->max_content_height);
-			return;
+			if (w->computed_style.height_sizing ==
+			    LCUI_SIZING_RULE_FIXED) {
+				flex->basis =
+				    Widget_ComputeXMetric(w, key_height);
+			} else {
+				flex->basis = w->max_content_height;
+			}
+		} else {
+			flex->basis = Widget_ComputeYMetric(w, key_flex_basis);
 		}
-		flex->basis = Widget_ComputeYMetric(w, key_flex_basis);
+		if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+			flex->basis = ToBorderBoxHeight(w, flex->basis);
+		}
+		flex->basis = Widget_GetLimitedHeight(w, flex->basis);
 		return;
 	}
 	if (Widget_HasAutoStyle(w, key_flex_basis)) {
-		flex->basis = ToBorderBoxWidth(w, w->max_content_width);
-		return;
+		if (w->computed_style.width_sizing == LCUI_SIZING_RULE_FIXED) {
+			flex->basis = Widget_ComputeXMetric(w, key_width);
+		} else {
+			flex->basis = w->max_content_width;
+		}
+	} else {
+		flex->basis = Widget_ComputeXMetric(w, key_flex_basis);
 	}
-	flex->basis = Widget_ComputeXMetric(w, key_flex_basis);
+	if (w->computed_style.box_sizing == SV_CONTENT_BOX) {
+		flex->basis = ToBorderBoxWidth(w, flex->basis);
+	}
+	flex->basis = Widget_GetLimitedWidth(w, flex->basis);
 }
 
 void Widget_ComputeVisibilityStyle(LCUI_Widget w)

@@ -155,7 +155,7 @@ static LCUI_BlockLayoutContext BlockLayout_Begin(LCUI_Widget w,
 		    style->width_sizing == LCUI_SIZING_RULE_PERCENT) {
 			rule = LCUI_LAYOUT_RULE_FIXED;
 		} else if (rule == LCUI_LAYOUT_RULE_FIXED_WIDTH &&
-		    style->height_sizing == LCUI_SIZING_RULE_PERCENT) {
+			   style->height_sizing == LCUI_SIZING_RULE_PERCENT) {
 			rule = LCUI_LAYOUT_RULE_FIXED;
 		}
 	}
@@ -218,13 +218,14 @@ static void BlockLayout_Load(LCUI_BlockLayoutContext ctx)
 	LCUI_Widget w = ctx->widget;
 	LinkedListNode *node;
 
-	if (ctx->rule != LCUI_LAYOUT_RULE_FIXED_WIDTH) {
+	if (ctx->rule == LCUI_LAYOUT_RULE_FIXED_WIDTH ||
+	    ctx->rule == LCUI_LAYOUT_RULE_FIXED) {
+		max_row_width = ctx->widget->box.content.width;
+	} else {
 		if (w->computed_style.max_width != -1) {
 			max_row_width = w->computed_style.max_width -
 					PaddingX(w) - BorderX(w);
 		}
-	} else {
-		max_row_width = ctx->widget->box.content.width;
 	}
 	DEBUG_MSG("%s, start\n", ctx->widget->id);
 	DEBUG_MSG("%s, max_row_width: %g\n", ctx->widget->id, max_row_width);
@@ -236,7 +237,7 @@ static void BlockLayout_Load(LCUI_BlockLayoutContext ctx)
 			continue;
 		}
 		if (child->computed_style.width_sizing !=
-			LCUI_SIZING_RULE_FIXED ||
+			LCUI_SIZING_RULE_FIXED &&
 		    child->computed_style.width_sizing !=
 			LCUI_SIZING_RULE_FIT_CONTENT) {
 			UpdateBlockItemSize(child,
@@ -256,7 +257,8 @@ static void BlockLayout_Load(LCUI_BlockLayoutContext ctx)
 			if (max_row_width != -1 &&
 			    ctx->row->elements.length > 0 &&
 			    ctx->row->width + child->box.outer.width -
-				max_row_width > 0.4f) {
+				    max_row_width >
+				0.4f) {
 				DEBUG_MSG("next row\n");
 				BlockLayout_NextRow(ctx);
 			}
@@ -309,14 +311,17 @@ static void BlockLayout_ReflowRow(LCUI_BlockLayoutContext ctx, float row_y)
 	float x = ctx->widget->padding.left;
 
 	LCUI_Widget w;
+	LCUI_WidgetStyle *style;
 	LinkedListNode *node;
 
 	for (LinkedList_Each(node, &ctx->row->elements)) {
 		w = node->data;
-		if (w->computed_style.width_sizing != LCUI_SIZING_RULE_FIXED ||
-		    w->computed_style.width_sizing !=
-			LCUI_SIZING_RULE_FIT_CONTENT) {
-			UpdateBlockItemSize(w, LCUI_LAYOUT_RULE_FIXED_WIDTH);
+		style = &w->computed_style;
+		if ((style->height_sizing != LCUI_SIZING_RULE_FIXED &&
+		     style->height_sizing != LCUI_SIZING_RULE_FIT_CONTENT) ||
+		    (style->width_sizing != LCUI_SIZING_RULE_FIXED &&
+		     style->width_sizing != LCUI_SIZING_RULE_FIT_CONTENT)) {
+			UpdateBlockItemSize(w, LCUI_LAYOUT_RULE_FIXED);
 		}
 		BlockLayout_UpdateElementMargin(ctx, w);
 		BlockLayout_UpdateElementPosition(ctx, w, x, row_y);
