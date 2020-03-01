@@ -122,7 +122,7 @@ static LCUI_BOOL Widget_IsPaintable(LCUI_Widget w)
 	    s->shadow.spread > 0) {
 		return TRUE;
 	}
-	return w->proto && w->proto->paint;
+	return w->proto && w->proto->paint && w->proto->name;
 }
 
 static LCUI_BOOL Widget_HasRoundBorder(LCUI_Widget w)
