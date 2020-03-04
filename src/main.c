@@ -42,6 +42,7 @@
 #include <LCUI/ime.h>
 #include <LCUI/platform.h>
 #include <LCUI/display.h>
+#include <LCUI/gui/widget_fpsmeter.h>
 #ifdef LCUI_EVENTS_H
 #include LCUI_EVENTS_H
 #endif
@@ -642,6 +643,7 @@ void LCUI_InitBase(void)
 	LCUI_InitCursor();
 	LCUI_InitWidget();
 	LCUI_InitMetrics();
+	LCUI_InitFpsMeter();
 }
 
 void LCUI_Init(void)
@@ -688,6 +690,7 @@ int LCUI_Destroy(void)
 	LCUI_FreeTimer();
 	LCUI_FreeEvent();
 	LCUI_FreeMetrics();
+	LCUI_FreeFpsMeter();
 	return System.exit_code;
 }
 
