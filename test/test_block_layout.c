@@ -5,6 +5,7 @@
 #include <LCUI/gui/widget.h>
 #include <LCUI/gui/builder.h>
 #include <LCUI/gui/widget/textview.h>
+#include <LCUI/gui/widget_fpsmeter.h>
 
 static void test_dropdown(void)
 {
@@ -754,6 +755,7 @@ int main(int argc, char **argv)
 {
 	Logger_SetLevel(LOGGER_LEVEL_INFO);
 	test_block_layout();
+	LCUI_FpsMeter_Enable();
 	return LCUI_Main();
 }
 

@@ -38,6 +38,8 @@ LCUI_BEGIN_HEADER
 #include <LCUI/gui/widget/textview.h>
 
 typedef struct LCUI_FpsMeterRec_ {
+	LCUI_BOOL is_enabled;
+
 	LCUI_Widget widget;
 
 	int64_t last_time;

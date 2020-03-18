@@ -44,24 +44,15 @@
 #define FPS_METER_TEXT_SIZE_MAX		(256)
 #define FPS_METER_UPDATE_TIME_MS	(1000)
 
-static LCUI_FpsMeterRec self;
+static LCUI_FpsMeterRec self = {FALSE, };
 
-static void LCUI_FpsMeter_Create(void)
-{
-	self.widget = LCUIWidget_New("textview");
-	TextView_SetColor(self.widget, RGB(255, 255, 255));
-	Widget_SetFontStyle(self.widget, key_font_size, 16, px);
-	Widget_SetFontStyle(self.widget, key_text_align, SV_LEFT, style);
-	Widget_SetStyleString(self.widget, "z-index", "999");
-	Widget_SetPosition(self.widget, SV_ABSOLUTE);
-	Widget_SetPadding(self.widget, 20, 20, 20, 20 );
-	Widget_SetStyle(self.widget, key_background_color, RGB(60, 60, 60), color);
-	Widget_SetStyle(self.widget, key_opacity, 0.5, scale);
-	Widget_UpdateStyle(self.widget, TRUE);
-}
+#define IS_ENABLED_CHECK if (self.is_enabled == FALSE) \
+				return;
 
 void LCUI_FpsMeter_Update()
 {
+	IS_ENABLED_CHECK
+
 	char buf[FPS_METER_TEXT_SIZE_MAX];
 	snprintf(buf, FPS_METER_TEXT_SIZE_MAX,
 			"FPS: %ld\n"
@@ -73,22 +64,6 @@ void LCUI_FpsMeter_Update()
 			self.widget_update_count,
 			self.render_count);
 	TextView_SetText(self.widget, buf);
-}
-
-void LCUI_InitFpsMeter(void)
-{
-	self.last_time = LCUI_GetTime();
-	self.frame_count = 0;
-	self.fps = 0;
-	self.render_thread_count = 1;
-
-	LCUI_FpsMeter_Create();
-	LCUI_FpsMeter_Update();
-}
-
-void LCUI_FreeFpsMeter(void)
-{
-	Widget_Unlink(self.widget);
 }
 
 void LCUI_FpsMeter_FrameCount(void)
@@ -126,11 +101,32 @@ void LCUI_FpsMeter_WidgetUpdateCount(size_t count)
 
 void LCUI_FpsMeter_Enable()
 {
+	self.last_time = LCUI_GetTime();
+	self.frame_count = 0;
+	self.fps = 0;
+	self.render_thread_count = 1;
+
+	self.widget = LCUIWidget_New("textview");
+	TextView_SetColor(self.widget, RGB(255, 255, 255));
+	Widget_SetFontStyle(self.widget, key_font_size, 16, px);
+	Widget_SetFontStyle(self.widget, key_text_align, SV_LEFT, style);
+	Widget_SetStyleString(self.widget, "z-index", "999");
+	Widget_SetPosition(self.widget, SV_ABSOLUTE);
+	Widget_SetPadding(self.widget, 20, 20, 20, 20 );
+	Widget_SetStyle(self.widget, key_background_color, RGB(60, 60, 60), color);
+	Widget_SetStyle(self.widget, key_opacity, 0.5, scale);
+	Widget_UpdateStyle(self.widget, TRUE);
+
+	LCUI_FpsMeter_Update();
+
 	Widget_Append(LCUIWidget_GetRoot(), self.widget);
+
+	self.is_enabled = TRUE;
 }
 
 void LCUI_FpsMeter_Disable()
 {
+	self.is_enabled = FALSE;
 	Widget_Unlink(self.widget);
 }
 
