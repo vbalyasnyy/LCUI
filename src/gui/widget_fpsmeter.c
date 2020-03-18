@@ -46,12 +46,11 @@
 
 static LCUI_FpsMeterRec self = {FALSE, };
 
-#define IS_ENABLED_CHECK if (self.is_enabled == FALSE) \
-				return;
-
 void LCUI_FpsMeter_Update()
 {
-	IS_ENABLED_CHECK
+	if (self.is_enabled == FALSE) {
+		return;
+	}
 
 	char buf[FPS_METER_TEXT_SIZE_MAX];
 	snprintf(buf, FPS_METER_TEXT_SIZE_MAX,
@@ -117,11 +116,9 @@ void LCUI_FpsMeter_Enable()
 	Widget_SetStyle(self.widget, key_opacity, 0.5, scale);
 	Widget_UpdateStyle(self.widget, TRUE);
 
-	LCUI_FpsMeter_Update();
-
-	Widget_Append(LCUIWidget_GetRoot(), self.widget);
-
 	self.is_enabled = TRUE;
+	LCUI_FpsMeter_Update();
+	Widget_Append(LCUIWidget_GetRoot(), self.widget);
 }
 
 void LCUI_FpsMeter_Disable()

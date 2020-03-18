@@ -751,11 +751,33 @@ void test_block_layout(void)
 
 #ifdef PREVIEW_MODE
 
+static void OnToggle(LCUI_Widget w, LCUI_WidgetEvent e, void *arg)
+{
+	static LCUI_BOOL state = 0;
+
+	if (state == TRUE) {
+		LCUI_FpsMeter_Disable();
+		Button_SetText(w, "Disable");
+		state = FALSE;
+	} else {
+		LCUI_FpsMeter_Enable();
+		Button_SetText(w, "Enable");
+		state = TRUE;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	Logger_SetLevel(LOGGER_LEVEL_INFO);
-	test_block_layout();
-	LCUI_FpsMeter_Enable();
+	LCUI_Init();
+	//test_block_layout();
+//	LCUI_FpsMeter_Enable();
+
+	LCUI_Widget root = LCUIWidget_GetRoot();
+	LCUI_Widget btn_toggle = LCUIWidget_New("button");
+	Widget_Append(root, btn_toggle);
+	Widget_BindEvent(btn_toggle, "click", OnToggle, NULL, NULL);
+
 	return LCUI_Main();
 }
 
