@@ -38,6 +38,7 @@
 #include <LCUI/font/fontlibrary.h>
 #include <LCUI/gui/css_library.h>
 #include <LCUI/gui/css_fontstyle.h>
+#include <LCUI/gui/css_parser.h>
 #include <LCUI/font/textlayer.h>
 #include <LCUI/gui/widget_fpsmeter.h>
 
@@ -45,6 +46,22 @@
 #define FPS_METER_UPDATE_TIME_MS	(1000)
 
 static LCUI_FpsMeterRec self = {FALSE, };
+
+
+static const char *css = CodeToString(
+
+textview {
+	color: rgb(255,255,255);
+	font-size: 16px;
+	text-align: left;
+	z-index: INT_MAX;
+	position: absolute;
+	padding: 20px, 20px 20px 20px;
+	background-color: rgb(60, 60, 60);
+	opacity: 0.5;
+}
+
+);
 
 void LCUI_FpsMeter_Update()
 {
@@ -106,14 +123,7 @@ void LCUI_FpsMeter_Enable()
 	self.render_thread_count = 1;
 
 	self.widget = LCUIWidget_New("textview");
-	TextView_SetColor(self.widget, RGB(255, 255, 255));
-	Widget_SetFontStyle(self.widget, key_font_size, 16, px);
-	Widget_SetFontStyle(self.widget, key_text_align, SV_LEFT, style);
-	Widget_SetStyleString(self.widget, "z-index", "999");
-	Widget_SetPosition(self.widget, SV_ABSOLUTE);
-	Widget_SetPadding(self.widget, 20, 20, 20, 20 );
-	Widget_SetStyle(self.widget, key_background_color, RGB(60, 60, 60), color);
-	Widget_SetStyle(self.widget, key_opacity, 0.5, scale);
+	LCUI_LoadCSSString(css, __FILE__);
 	Widget_UpdateStyle(self.widget, TRUE);
 
 	self.is_enabled = TRUE;
@@ -124,6 +134,6 @@ void LCUI_FpsMeter_Enable()
 void LCUI_FpsMeter_Disable()
 {
 	self.is_enabled = FALSE;
-	Widget_Unlink(self.widget);
+	Widget_Destroy(self.widget);
 }
 

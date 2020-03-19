@@ -51,10 +51,6 @@ typedef struct LCUI_FpsMeterRec_ {
 	size_t widget_update_count;
 } LCUI_FpsMeterRec, *LCUI_FpsMeter;
 
-void LCUI_InitFpsMeter(void);
-
-void LCUI_FreeFpsMeter(void);
-
 void LCUI_FpsMeter_FrameCount(void);
 
 void LCUI_FpsMeter_RenderThreadCount(int count);
