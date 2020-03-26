@@ -1,5 +1,5 @@
 ﻿/*
- * widget_fpsmeter.h -- The widget fps meter operation set.
+ * fpsmeter.h -- The widget fps meter operation set.
  *
  * Copyright (c) 2020, Vasilyy Balyasnyy <v.balyasnyy@gmail.com> All rights reserved.
  *
@@ -40,7 +40,7 @@
 #include <LCUI/gui/css_fontstyle.h>
 #include <LCUI/gui/css_parser.h>
 #include <LCUI/font/textlayer.h>
-#include <LCUI/gui/widget_fpsmeter.h>
+#include <LCUI/gui/fpsmeter.h>
 
 #define FPS_METER_TEXT_SIZE_MAX		(256)
 #define FPS_METER_UPDATE_TIME_MS	(1000)
@@ -115,25 +115,24 @@ void LCUI_FpsMeter_WidgetUpdateCount(size_t count)
 	}
 }
 
-void LCUI_FpsMeter_Enable()
+void LCUI_EnableFpsMeter(LCUI_BOOL enabled)
 {
-	self.last_time = LCUI_GetTime();
-	self.frame_count = 0;
-	self.fps = 0;
-	self.render_thread_count = 1;
+	if (enabled == TRUE) {
+		self.last_time = LCUI_GetTime();
+		self.frame_count = 0;
+		self.fps = 0;
+		self.render_thread_count = 1;
 
-	self.widget = LCUIWidget_New("textview");
-	LCUI_LoadCSSString(css, __FILE__);
-	Widget_UpdateStyle(self.widget, TRUE);
+		self.widget = LCUIWidget_New("textview");
+		LCUI_LoadCSSString(css, __FILE__);
+		Widget_UpdateStyle(self.widget, TRUE);
 
-	self.is_enabled = TRUE;
-	LCUI_FpsMeter_Update();
-	Widget_Append(LCUIWidget_GetRoot(), self.widget);
-}
-
-void LCUI_FpsMeter_Disable()
-{
-	self.is_enabled = FALSE;
-	Widget_Destroy(self.widget);
+		self.is_enabled = TRUE;
+		LCUI_FpsMeter_Update();
+		Widget_Append(LCUIWidget_GetRoot(), self.widget);
+	} else {
+		self.is_enabled = FALSE;
+		Widget_Destroy(self.widget);
+	}
 }
 

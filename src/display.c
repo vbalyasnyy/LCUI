@@ -44,7 +44,7 @@
 #include <LCUI/thread.h>
 #include <LCUI/display.h>
 #include <LCUI/platform.h>
-#include <LCUI/gui/widget_fpsmeter.h>
+#include <LCUI/gui/fpsmeter.h>
 #ifdef LCUI_DISPLAY_H
 #include LCUI_DISPLAY_H
 #endif

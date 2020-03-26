@@ -35,7 +35,7 @@
 #include <LCUI_Build.h>
 #include <LCUI/LCUI.h>
 #include <LCUI/gui/widget.h>
-#include <LCUI/gui/widget_fpsmeter.h>
+#include <LCUI/gui/fpsmeter.h>
 #include <LCUI/gui/metrics.h>
 #include "widget_diff.h"
 #include "widget_border.h"

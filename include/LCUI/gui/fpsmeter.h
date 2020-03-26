@@ -1,5 +1,5 @@
 /*
- * widget_fpsmeter.h -- The widget fps meter operation set.
+ * fpsmeter.h -- The widget fps meter operation set.
  *
  * Copyright (c) 2020, Vasilyy Balyasnyy <v.balyasnyy@gmail.com> All rights reserved.
  *
@@ -28,8 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LCUI_WIDGET_FPSMETER_H
-#define LCUI_WIDGET_FPSMETER_H
+#ifndef LCUI_FPSMETER_H
+#define LCUI_FPSMETER_H
 
 LCUI_BEGIN_HEADER
 
@@ -59,9 +59,7 @@ void LCUI_FpsMeter_RenderCount(size_t count);
 
 void LCUI_FpsMeter_WidgetUpdateCount(size_t count);
 
-void LCUI_FpsMeter_Enable(void);
-
-void LCUI_FpsMeter_Disable(void);
+void LCUI_EnableFpsMeter(LCUI_BOOL enabled);
 
 LCUI_END_HEADER
 
